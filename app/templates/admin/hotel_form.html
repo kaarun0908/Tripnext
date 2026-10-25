@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — TripNest Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 fw-bold mb-0">{{ title }}</h1>
+                <a href="{{ url_for('admin.hotels') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Hotels
+                </a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label fw-bold">Hotel / Resort Name</label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Savoy - IHCL SeleQtions") }}
+                            {% for err in form.name.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">Destination</label>
+                            {{ form.destination_id(class="form-select") }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Address / Street</label>
+                            {{ form.address(class="form-control", placeholder="e.g. 77 Sylks Road, Ooty") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Star Rating (1 - 5)</label>
+                            {{ form.rating(class="form-control") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Amenities (Comma separated)</label>
+                        {{ form.amenities(class="form-control", placeholder="Free WiFi, Spa, Heated Pool, Mountain View Balconies") }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Image URL (Optional)</label>
+                        {{ form.image_url(class="form-control") }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Property Description</label>
+                        {{ form.description(class="form-control", rows=4) }}
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        {{ form.is_active(class="form-check-input") }}
+                        <label class="form-check-label fw-semibold" for="is_active">Active and open for guest reservations</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-teal px-4">Save Hotel</button>
+                        <a href="{{ url_for('admin.hotels') }}" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

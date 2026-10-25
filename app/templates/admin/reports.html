@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & SQL Analytics — TripNest Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Reports & SQL Analytics Demonstration</h1>
+            <p class="text-muted small mb-0">PostgreSQL view aggregations, financial summaries, and data export.</p>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a href="{{ url_for('admin.export_bookings_csv') }}" class="btn btn-success btn-sm d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i> Download Bookings CSV
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+        </div>
+    </div>
+
+    <!-- SQL Architecture Showcase -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-database-fill-check text-primary me-2"></i> Database Schema & Architecture</h5>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Database Engine:</span>
+                        <span class="badge bg-primary">PostgreSQL 14+ Relational DBMS</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Total Normalized Tables:</span>
+                        <span class="fw-bold">13 Core Entity Tables</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Concurrent Room Guard:</span>
+                        <span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Row Locking + RoomReservations Table</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Monetary Storage:</span>
+                        <span class="fw-bold">NUMERIC(10, 2) Exact Decimals</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Auditability:</span>
+                        <span class="badge bg-secondary">BookingStatusHistory Chronological Log</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-graph-up-arrow text-success me-2"></i> Financial Performance Snapshot</h5>
+                <div class="row g-3 text-center mb-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <span class="text-muted small d-block">Gross Paid Revenue</span>
+                            <span class="fs-4 fw-bold text-success">₹{{ "{:,.2f}".format(metrics.total_revenue) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <span class="text-muted small d-block">Average Order Value</span>
+                            <span class="fs-4 fw-bold text-teal" style="color: var(--primary-color);">
+                                {% if metrics.confirmed_bookings > 0 %}
+                                    ₹{{ "{:,.2f}".format(metrics.total_revenue / metrics.confirmed_bookings) }}
+                                {% else %}
+                                    ₹0.00
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <p class="small text-muted mb-0">
+                    Calculated using SQL aggregate queries (SUM, COUNT, CASE statements) filtered strictly on verified SUCCESS payments.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SQL Demonstrations Script Reference -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h5 class="fw-bold mb-3"><i class="bi bi-code-slash text-teal me-2" style="color: var(--primary-color);"></i> Database Views & Analysis Scripts</h5>
+        <p class="small text-muted">
+            The full reporting queries script is located at <code class="fw-bold">scripts/reporting_queries.sql</code>. Key query examples include:
+        </p>
+
+        <div class="accordion" id="sqlAccordion">
+            <div class="accordion-item border-0 mb-2 rounded-3 bg-light">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                        1. Multi-Table Join & View: view_booking_summaries
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#sqlAccordion">
+                    <div class="accordion-body">
+                        <pre class="bg-dark text-white p-3 rounded-3 small mb-0"><code>CREATE OR REPLACE VIEW view_booking_summaries AS
+SELECT 
+    b.id AS booking_id,
+    b.booking_reference,
+    u.full_name AS customer_name,
+    u.email AS customer_email,
+    COALESCE(p.name, CONCAT(h.name, ' - ', r.room_type)) AS item_name,
+    b.check_in,
+    b.check_out,
+    (b.check_out - b.check_in) AS duration_days,
+    b.total_amount,
+    b.booking_status,
+    pay.payment_status
+FROM bookings b
+INNER JOIN users u ON b.user_id = u.id
+LEFT JOIN packages p ON b.package_id = p.id
+LEFT JOIN rooms r ON b.room_id = r.id
+LEFT JOIN hotels h ON r.hotel_id = h.id
+LEFT JOIN payments pay ON b.id = pay.booking_id;</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item border-0 mb-2 rounded-3 bg-light">
+                <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                        2. Aggregation & GROUP BY with HAVING Clause
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#sqlAccordion">
+                    <div class="accordion-body">
+                        <pre class="bg-dark text-white p-3 rounded-3 small mb-0"><code>SELECT 
+    d.name AS destination_name,
+    d.category,
+    COUNT(b.id) AS confirmed_orders,
+    SUM(b.total_amount) AS gross_sales,
+    AVG(b.total_amount) AS avg_booking_value
+FROM destinations d
+INNER JOIN packages p ON d.id = p.destination_id
+INNER JOIN bookings b ON p.id = b.package_id
+WHERE b.booking_status = 'CONFIRMED'
+GROUP BY d.name, d.category
+HAVING COUNT(b.id) >= 1
+ORDER BY gross_sales DESC;</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item border-0 rounded-3 bg-light">
+                <h2 class="accordion-header" id="headingThree">
+                    <button class="accordion-button collapsed fw-bold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                        3. Atomic Transaction with Concurrency Lock
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#sqlAccordion">
+                    <div class="accordion-body">
+                        <pre class="bg-dark text-white p-3 rounded-3 small mb-0"><code>BEGIN;
+-- Lock room inventory row
+SELECT id, total_rooms FROM rooms WHERE id = 1 FOR UPDATE;
+
+-- Insert reservation header
+INSERT INTO bookings (booking_reference, user_id, room_id, check_in, check_out, number_of_guests, total_amount, booking_status, created_at)
+VALUES ('TN-2026-SQLTXN', 2, 1, '2026-11-10', '2026-11-12', 2, 17000.00, 'PENDING', NOW());
+
+-- Log audit status change
+INSERT INTO booking_status_history (booking_id, old_status, new_status, changed_by, changed_at, remarks)
+VALUES (currval(pg_get_serial_sequence('bookings', 'id')), NULL, 'PENDING', 2, NOW(), 'Created atomic SQL transaction');
+
+COMMIT;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

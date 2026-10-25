@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}{{ destination.name }} — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.destinations') }}" class="text-decoration-none">Destinations</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ destination.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Detail Hero -->
+    <div class="detail-hero">
+        <img src="{{ destination.image_url }}" alt="{{ destination.name }}">
+        <div class="detail-hero-overlay">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
+                        {{ destination.category }}
+                    </span>
+                    <h1 class="display-5 fw-bold mb-1">{{ destination.name }}</h1>
+                    <p class="mb-0 fs-6 opacity-75"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> {{ destination.region }}, {{ destination.country }}</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-dark px-3 py-2 rounded-3 text-center shadow">
+                        <small class="text-muted d-block" style="font-size: 0.75rem;">Estimated Budget</small>
+                        <span class="fw-bold fs-5 text-teal" style="color: var(--primary-color);">{{ destination.estimated_budget | inr }}</span>
+                    </div>
+
+                    {% if current_user.is_authenticated %}
+                        <form action="{{ url_for('main.toggle_favourite', destination_id=destination.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn {% if is_fav %}btn-danger{% else %}btn-light{% endif %} d-flex align-items-center gap-2 px-3 py-2 rounded-3 shadow">
+                                <i class="bi {% if is_fav %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                                {% if is_fav %}Saved{% else %}Save{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description & Highlights -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <h3 class="h4 fw-bold mb-3">About {{ destination.name }}</h3>
+                <p class="text-secondary leading-relaxed mb-0">{{ destination.description }}</p>
+            </div>
+
+            <!-- Key Attractions -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <h3 class="h4 fw-bold mb-4"><i class="bi bi-camera-fill text-primary me-2"></i> Must-Visit Attractions</h3>
+                <div class="row g-3">
+                    {% for sight in destination.attractions %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 border bg-light h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="h6 fw-bold mb-0 text-dark">{{ sight.name }}</h5>
+                                <span class="badge bg-white text-dark border">
+                                    {% if sight.entry_fee > 0 %}Fee: {{ sight.entry_fee | inr }}{% else %}Free Entry{% endif %}
+                                </span>
+                            </div>
+                            <p class="small text-muted mb-2">{{ sight.description }}</p>
+                            {% if sight.opening_information %}
+                                <small class="text-secondary d-block"><i class="bi bi-clock me-1 text-teal"></i> {{ sight.opening_information }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Associated Packages -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h4 fw-bold mb-0"><i class="bi bi-box2-heart-fill text-danger me-2"></i> Tour Packages for {{ destination.name }}</h3>
+                    <a href="{{ url_for('main.packages', destination_id=destination.id) }}" class="btn btn-sm btn-outline-teal">View All</a>
+                </div>
+
+                <div class="row g-3">
+                    {% for pkg in packages %}
+                    <div class="col-md-6">
+                        <div class="card border rounded-3 h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="h6 fw-bold mb-0">{{ pkg.name }}</h5>
+                                <span class="badge bg-light text-primary border">{{ pkg.duration_days }} Days</span>
+                            </div>
+                            <p class="small text-muted mb-3">{{ pkg.description[:85] }}...</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                                <span class="fw-bold text-teal" style="color: var(--primary-color);">{{ pkg.price_per_person | inr }} <small class="text-muted fw-normal">/ person</small></span>
+                                <a href="{{ url_for('main.package_detail', package_id=pkg.id) }}" class="btn btn-sm btn-accent">View Plan</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No custom packages listed yet for this destination.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Associated Hotels -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h4 fw-bold mb-0"><i class="bi bi-building-fill text-warning me-2"></i> Hotels & Resorts in {{ destination.name }}</h3>
+                    <a href="{{ url_for('main.hotels', destination_id=destination.id) }}" class="btn btn-sm btn-outline-teal">View All</a>
+                </div>
+
+                <div class="row g-3">
+                    {% for hotel in hotels %}
+                    <div class="col-md-6">
+                        <div class="card border rounded-3 h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="h6 fw-bold mb-0">{{ hotel.name }}</h5>
+                                <span class="badge-rating"><i class="bi bi-star-fill"></i> {{ hotel.rating }}</span>
+                            </div>
+                            <small class="text-muted d-block mb-2"><i class="bi bi-geo-alt me-1"></i> {{ hotel.address }}</small>
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                                <span class="small text-muted">{{ hotel.rooms|length }} room type(s)</span>
+                                <a href="{{ url_for('main.hotel_detail', hotel_id=hotel.id) }}" class="btn btn-sm btn-primary-teal">Check Rooms</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No hotels listed yet for this destination.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Reviews & Rating Summary -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white sticky-top" style="top: 90px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 fw-bold mb-0">Traveller Reviews</h3>
+                    <span class="badge-rating fs-6"><i class="bi bi-star-fill"></i> {{ destination.average_rating }} / 5.0</span>
+                </div>
+                <small class="text-muted d-block mb-3">Based on {{ reviews|length }} verified tourist feedback</small>
+
+                <!-- Review Form if eligible -->
+                {% if current_user.is_authenticated %}
+                    {% if can_review %}
+                    <div class="border rounded-3 p-3 mb-4 bg-light">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-pencil-square me-1"></i> Leave Your Feedback</h6>
+                        <form action="{{ url_for('main.submit_review') }}" method="POST">
+                            {{ review_form.hidden_tag() }}
+                            <input type="hidden" name="destination_id" value="{{ destination.id }}">
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Rating</label>
+                                {{ review_form.rating(class="form-select form-select-sm") }}
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Experience & Advice</label>
+                                {{ review_form.comment(class="form-control form-control-sm", rows=3, placeholder="Share your experience...") }}
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-accent w-100">Submit Verified Review</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-light border small text-muted py-2">
+                        <a href="{{ url_for('auth.login') }}" class="fw-bold">Sign In</a> to write a review after your trip.
+                    </div>
+                {% endif %}
+
+                <!-- Existing Reviews List -->
+                <div class="review-list">
+                    {% for rev in reviews %}
+                    <div class="border-bottom py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small">{{ rev.user.full_name }}</span>
+                            <div class="text-warning small">
+                                {% for i in range(rev.rating) %}<i class="bi bi-star-fill"></i>{% endfor %}
+                            </div>
+                        </div>
+                        <p class="small text-secondary mb-1">"{{ rev.comment }}"</p>
+                        <small class="text-muted" style="font-size: 0.75rem;">{{ rev.created_at.strftime('%b %d, %Y') }}</small>
+                    </div>
+                    {% else %}
+                    <p class="small text-muted py-3">No reviews submitted yet for this destination.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

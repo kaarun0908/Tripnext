@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hotel.name }} — Hotels | TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.hotels') }}">Hotels</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ hotel.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Detail Hero -->
+    <div class="detail-hero">
+        <img src="{{ hotel.image_url or hotel.destination.image_url }}" alt="{{ hotel.name }}">
+        <div class="detail-hero-overlay">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
+                        <i class="bi bi-star-fill text-dark me-1"></i> {{ hotel.rating }} / 5.0 Rating
+                    </span>
+                    <h1 class="display-5 fw-bold mb-1">{{ hotel.name }}</h1>
+                    <p class="mb-0 fs-6 opacity-75">
+                        <i class="bi bi-geo-alt-fill me-1 text-danger"></i> {{ hotel.address }} &bull; {{ hotel.destination.name }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <!-- About Hotel -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <h3 class="h4 fw-bold mb-3">About The Property</h3>
+                <p class="text-secondary leading-relaxed mb-4">{{ hotel.description }}</p>
+
+                <h4 class="h6 fw-bold mb-3 text-dark">Featured Amenities & Services:</h4>
+                <div class="row g-2">
+                    {% for am in hotel.amenity_list %}
+                    <div class="col-md-4 col-6">
+                        <div class="p-2 border rounded-3 bg-light small d-flex align-items-center gap-2">
+                            <i class="bi bi-check2-circle text-teal" style="color: var(--primary-color);"></i>
+                            <span>{{ am }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Available Rooms & Suites -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="h4 fw-bold mb-0"><i class="bi bi-door-open-fill text-primary me-2"></i> Select Your Room</h3>
+                    <span class="small text-muted">Instant Booking Confirmation</span>
+                </div>
+
+                <div class="row g-3">
+                    {% for room in rooms %}
+                    <div class="col-12">
+                        <div class="card border rounded-4 p-4 h-100 bg-light">
+                            <div class="row align-items-center">
+                                <div class="col-md-7 mb-3 mb-md-0">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h4 class="h5 fw-bold mb-0 text-dark">{{ room.room_type }}</h4>
+                                        <span class="badge bg-white text-secondary border">Total Inventory: {{ room.total_rooms }}</span>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        <i class="bi bi-people-fill me-1 text-primary"></i> Accommodates up to <strong>{{ room.capacity }} guests</strong>
+                                    </p>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-white text-success border"><i class="bi bi-check-lg me-1"></i>Free Cancellation (48 hrs)</span>
+                                        <span class="badge bg-white text-info text-dark border"><i class="bi bi-cup-hot me-1"></i>Breakfast Option</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-5 text-md-end">
+                                    <div class="mb-2">
+                                        <span class="fs-4 fw-bold text-teal" style="color: var(--primary-color);">{{ room.price_per_night | inr }}</span>
+                                        <span class="small text-muted">/ night</span>
+                                    </div>
+                                    <a href="{{ url_for('bookings.book_room', room_id=room.id) }}" class="btn btn-accent px-4 shadow-sm">
+                                        Reserve Room <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No active rooms currently available for this property.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Contact -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
+                <h3 class="h5 fw-bold mb-3">Hotel Information</h3>
+                <ul class="list-unstyled small mb-4">
+                    <li class="mb-2"><i class="bi bi-geo-alt text-danger me-2"></i> <strong>Location:</strong> {{ hotel.address }}</li>
+                    <li class="mb-2"><i class="bi bi-clock text-primary me-2"></i> <strong>Check-in:</strong> 02:00 PM</li>
+                    <li class="mb-2"><i class="bi bi-clock-history text-primary me-2"></i> <strong>Check-out:</strong> 11:00 AM</li>
+                    <li class="mb-2"><i class="bi bi-shield-check text-success me-2"></i> <strong>Safety:</strong> Certified Sanitary Standards</li>
+                </ul>
+
+                <hr>
+
+                <h4 class="h6 fw-bold mb-2">Verified Reviews ({{ reviews|length }})</h4>
+                <div class="review-box">
+                    {% for rev in reviews[:3] %}
+                    <div class="border-bottom py-2">
+                        <div class="d-flex justify-content-between small">
+                            <span class="fw-semibold">{{ rev.user.full_name }}</span>
+                            <span class="text-warning">{% for i in range(rev.rating) %}&#9733;{% endfor %}</span>
+                        </div>
+                        <p class="small text-muted mb-0">"{{ rev.comment }}"</p>
+                    </div>
+                    {% else %}
+                    <p class="small text-muted mb-0">No reviews yet for this hotel.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <span class="section-tag">Welcome Back</span>
+            <h1 class="section-title h2 mb-1">{{ current_user.full_name }}</h1>
+            <p class="text-muted"><i class="bi bi-envelope me-1"></i> {{ current_user.email }} &bull; Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('main.destinations') }}" class="btn btn-primary-teal">
+                <i class="bi bi-compass me-1"></i> Plan Next Trip
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <span class="text-muted small">Confirmed Trips</span>
+                <h3 class="fw-bold mb-0 text-success">{{ upcoming|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <span class="text-muted small">Pending Payment</span>
+                <h3 class="fw-bold mb-0 text-warning">{{ pending|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <span class="text-muted small">Saved Favourites</span>
+                <h3 class="fw-bold mb-0 text-danger">{{ favourites|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <span class="text-muted small">Reviews Posted</span>
+                <h3 class="fw-bold mb-0 text-primary">{{ reviews|length }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming / Confirmed Trips -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 fw-bold mb-0"><i class="bi bi-airplane-engines text-primary me-2"></i> Upcoming Confirmed Trips</h3>
+            <a href="{{ url_for('bookings.my_bookings', status='CONFIRMED') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+        </div>
+
+        {% if upcoming %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Booking Ref</th>
+                        <th>Trip / Accommodation</th>
+                        <th>Travel Dates</th>
+                        <th>Guests</th>
+                        <th>Total Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in upcoming %}
+                    <tr>
+                        <td><span class="fw-bold text-dark">{{ b.booking_reference }}</span></td>
+                        <td>
+                            {% if b.package %}
+                                <span class="badge bg-primary text-white me-1">Package</span> {{ b.package.name }}
+                            {% elif b.room %}
+                                <span class="badge bg-teal text-white me-1" style="background-color: var(--primary-color);">Hotel</span> {{ b.room.hotel.name }} ({{ b.room.room_type }})
+                            {% endif %}
+                        </td>
+                        <td>{{ b.check_in.strftime('%b %d, %Y') }} to {{ b.check_out.strftime('%b %d, %Y') }}</td>
+                        <td>{{ b.number_of_guests }}</td>
+                        <td><span class="fw-bold">{{ b.total_amount | inr }}</span></td>
+                        <td>
+                            <a href="{{ url_for('bookings.booking_detail', booking_id=b.id) }}" class="btn btn-sm btn-primary-teal">
+                                View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-2">No upcoming confirmed trips found.</p>
+            <a href="{{ url_for('main.packages') }}" class="btn btn-sm btn-accent">Explore Tour Packages</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pending Reservations Awaiting Payment -->
+    {% if pending %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-warning border-4">
+        <h3 class="h5 fw-bold mb-3 text-dark"><i class="bi bi-clock-history text-warning me-2"></i> Pending Payment Bookings</h3>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Booking Ref</th>
+                        <th>Item</th>
+                        <th>Dates</th>
+                        <th>Amount Due</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in pending %}
+                    <tr>
+                        <td class="fw-bold">{{ b.booking_reference }}</td>
+                        <td>{{ b.package.name if b.package else (b.room.hotel.name + ' - ' + b.room.room_type) }}</td>
+                        <td>{{ b.check_in.strftime('%b %d, %Y') }} to {{ b.check_out.strftime('%b %d, %Y') }}</td>
+                        <td class="fw-bold text-danger">{{ b.total_amount | inr }}</td>
+                        <td>
+                            <a href="{{ url_for('bookings.checkout', booking_id=b.id) }}" class="btn btn-sm btn-accent shadow-sm">
+                                <i class="bi bi-credit-card me-1"></i> Pay Now
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Favourites & Reviews Section -->
+    <div class="row g-4">
+        <!-- Saved Favourites -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 fw-bold mb-0"><i class="bi bi-heart-fill text-danger me-2"></i> Saved Favourites</h3>
+                    <a href="{{ url_for('main.favourites') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+
+                {% if favourites %}
+                <ul class="list-group list-group-flush">
+                    {% for fav in favourites[:4] %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ fav.destination.image_url }}" alt="{{ fav.destination.name }}" class="rounded-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ fav.destination.name }}</h6>
+                                <small class="text-muted">{{ fav.destination.region }}</small>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('main.destination_detail', destination_id=fav.destination.id) }}" class="btn btn-sm btn-outline-teal">
+                            Explore
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small my-3">You haven't saved any favourite destinations yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Submitted Reviews -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h3 class="h5 fw-bold mb-3"><i class="bi bi-chat-quote-fill text-teal me-2" style="color: var(--primary-color);"></i> Your Feedback</h3>
+                {% if reviews %}
+                <ul class="list-group list-group-flush">
+                    {% for rev in reviews[:4] %}
+                    <li class="list-group-item px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small">{{ rev.destination.name if rev.destination else rev.hotel.name }}</span>
+                            <span class="text-warning small">{% for i in range(rev.rating) %}&#9733;{% endfor %}</span>
+                        </div>
+                        <p class="small text-muted mb-0">"{{ rev.comment }}"</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small my-3">You haven't posted any reviews yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Bookings — TripNest Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Customer Bookings Management</h1>
+            <p class="text-muted small mb-0">View all customer reservations, update fulfillment status, and inspect transaction references.</p>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a href="{{ url_for('admin.export_bookings_csv') }}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to CSV
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="mb-4">
+        <div class="btn-group bg-white p-1 rounded-3 shadow-sm border">
+            <a href="{{ url_for('admin.bookings') }}" class="btn btn-sm {% if not current_status %}btn-primary-teal{% else %}btn-light{% endif %} rounded-2">
+                All ({{ bookings|length }})
+            </a>
+            <a href="{{ url_for('admin.bookings', status='CONFIRMED') }}" class="btn btn-sm {% if current_status == 'CONFIRMED' %}btn-primary-teal{% else %}btn-light{% endif %} rounded-2">
+                Confirmed
+            </a>
+            <a href="{{ url_for('admin.bookings', status='PENDING') }}" class="btn btn-sm {% if current_status == 'PENDING' %}btn-primary-teal{% else %}btn-light{% endif %} rounded-2">
+                Pending Payment
+            </a>
+            <a href="{{ url_for('admin.bookings', status='COMPLETED') }}" class="btn btn-sm {% if current_status == 'COMPLETED' %}btn-primary-teal{% else %}btn-light{% endif %} rounded-2">
+                Completed
+            </a>
+            <a href="{{ url_for('admin.bookings', status='CANCELLED') }}" class="btn btn-sm {% if current_status == 'CANCELLED' %}btn-primary-teal{% else %}btn-light{% endif %} rounded-2">
+                Cancelled
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Reference</th>
+                        <th>Customer</th>
+                        <th>Reserved Item</th>
+                        <th>Dates</th>
+                        <th>Guests</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th class="text-end pe-4">Update Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="fw-bold">{{ b.booking_reference }}</span>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">{{ b.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ b.user.full_name }}</div>
+                            <small class="text-muted">{{ b.user.email }}</small>
+                        </td>
+                        <td>
+                            {% if b.package %}
+                                <span class="badge bg-primary text-white me-1">Package</span> {{ b.package.name }}
+                            {% elif b.room %}
+                                <span class="badge bg-teal text-white me-1" style="background-color: var(--primary-color);">Room</span> {{ b.room.hotel.name }} - {{ b.room.room_type }}
+                            {% endif %}
+                        </td>
+                        <td>{{ b.check_in.strftime('%b %d') }} &rarr; {{ b.check_out.strftime('%b %d, %Y') }}</td>
+                        <td>{{ b.number_of_guests }}</td>
+                        <td class="fw-bold">{{ b.total_amount | inr }}</td>
+                        <td>
+                            {% if b.booking_status == 'CONFIRMED' %}
+                                <span class="badge badge-status badge-confirmed">CONFIRMED</span>
+                            {% elif b.booking_status == 'PENDING' %}
+                                <span class="badge badge-status badge-pending">PENDING</span>
+                            {% elif b.booking_status == 'CANCELLED' %}
+                                <span class="badge badge-status badge-cancelled">CANCELLED</span>
+                            {% else %}
+                                <span class="badge badge-status badge-completed">{{ b.booking_status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if b.payment and b.payment.payment_status == 'SUCCESS' %}
+                                <span class="badge bg-success">PAID</span><br>
+                                <code class="small text-muted" style="font-size: 0.7rem;">{{ b.payment.transaction_reference }}</code>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">UNPAID</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <form action="{{ url_for('admin.update_status', id=b.id) }}" method="POST" class="d-inline-flex gap-1 align-items-center">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <select name="status" class="form-select form-select-sm" style="width: 125px;">
+                                    <option value="CONFIRMED" {% if b.booking_status == 'CONFIRMED' %}selected{% endif %}>CONFIRMED</option>
+                                    <option value="COMPLETED" {% if b.booking_status == 'COMPLETED' %}selected{% endif %}>COMPLETED</option>
+                                    <option value="PENDING" {% if b.booking_status == 'PENDING' %}selected{% endif %}>PENDING</option>
+                                    <option value="CANCELLED" {% if b.booking_status == 'CANCELLED' %}selected{% endif %}>CANCELLED</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-teal" title="Save Status">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

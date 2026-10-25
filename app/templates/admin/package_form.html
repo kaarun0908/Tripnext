@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — TripNest Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 fw-bold mb-0">{{ title }}</h1>
+                <a href="{{ url_for('admin.packages') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Packages
+                </a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Package Name</label>
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Royal Nilgiris Adventure") }}
+                        {% for err in form.name.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Destination</label>
+                            {{ form.destination_id(class="form-select") }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Duration (Days)</label>
+                            {{ form.duration_days(class="form-control", type="number", min="1") }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Price / Person (₹)</label>
+                            {{ form.price_per_person(class="form-control") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Package Inclusions (Comma separated)</label>
+                        {{ form.inclusions(class="form-control", placeholder="4-Star Hotel, Daily Breakfast, Toy Train Pass, Private Cab") }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Image URL (Optional)</label>
+                        {{ form.image_url(class="form-control", placeholder="https://images.unsplash.com/...") }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        {{ form.description(class="form-control", rows=4) }}
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        {{ form.is_active(class="form-check-input") }}
+                        <label class="form-check-label fw-semibold" for="is_active">Publish package for bookings</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-teal px-4">Save Package</button>
+                        <a href="{{ url_for('admin.packages') }}" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

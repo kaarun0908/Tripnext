@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Indian Destinations — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <span class="section-tag">Destination Explorer</span>
+            <h1 class="section-title h2 mb-2">Discover Incredible India</h1>
+            <p class="text-muted">Explore hand-picked hill stations, tropical beaches, majestic heritage cities, and tranquil backwaters.</p>
+        </div>
+        <div class="col-md-5 text-md-end">
+            <span class="badge bg-light text-dark border p-2 px-3 rounded-pill">
+                <i class="bi bi-geo-fill text-danger me-1"></i> Showing <strong>{{ destinations|length }}</strong> destination(s)
+            </span>
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+        <form method="GET" action="{{ url_for('main.destinations') }}" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Search Destination or State</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" value="{{ search or '' }}" class="form-control border-0 bg-light" placeholder="e.g. Ooty, Kerala, Jaipur...">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Category</label>
+                <select name="category" class="form-select border-0 bg-light">
+                    <option value="">All Categories</option>
+                    <option value="Hill Station" {% if selected_category == 'Hill Station' %}selected{% endif %}>Hill Station</option>
+                    <option value="Beach" {% if selected_category == 'Beach' %}selected{% endif %}>Beach</option>
+                    <option value="Heritage" {% if selected_category == 'Heritage' %}selected{% endif %}>Heritage</option>
+                    <option value="Backwaters" {% if selected_category == 'Backwaters' %}selected{% endif %}>Backwaters</option>
+                    <option value="Nature" {% if selected_category == 'Nature' %}selected{% endif %}>Nature & Wildlife</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Sort By</label>
+                <select name="sort_by" class="form-select border-0 bg-light">
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                    <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name (A to Z)</option>
+                    <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name (Z to A)</option>
+                    <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Budget: Low to High</option>
+                    <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Budget: High to Low</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <label class="form-label small d-none d-md-block">&nbsp;</label>
+                <button type="submit" class="btn btn-primary-teal">
+                    Apply Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Destination Grid -->
+    {% if destinations %}
+    <div class="row g-4">
+        {% for dest in destinations %}
+        <div class="col-lg-4 col-md-6">
+            <div class="trip-card">
+                <div class="card-img-wrapper">
+                    <img src="{{ dest.image_url }}" alt="{{ dest.name }}" class="card-img-top">
+                    <span class="category-badge">{{ dest.category }}</span>
+                    <span class="price-tag-badge">From {{ dest.estimated_budget | inr }}</span>
+
+                    {% if current_user.is_authenticated %}
+                        <button type="button" class="fav-btn fav-toggle-btn {% if dest.id in user_fav_ids %}active{% endif %}" data-dest-id="{{ dest.id }}" title="Save to Favourites">
+                            <i class="bi {% if dest.id in user_fav_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h2 class="card-title h5 mb-0">{{ dest.name }}</h2>
+                            <small class="text-muted"><i class="bi bi-geo-alt me-1 text-primary"></i> {{ dest.region }}, {{ dest.country }}</small>
+                        </div>
+                        <span class="badge-rating">
+                            <i class="bi bi-star-fill"></i> {{ dest.average_rating }}
+                        </span>
+                    </div>
+
+                    <p class="card-text">{{ dest.description[:110] }}...</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <div class="small text-muted">
+                            <i class="bi bi-compass me-1"></i> {{ dest.attractions|length }} Sights | {{ dest.packages.count() }} Packages
+                        </div>
+                        <a href="{{ url_for('main.destination_detail', destination_id=dest.id) }}" class="btn btn-sm btn-primary-teal">
+                            Explore <i class="bi bi-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="mb-3 text-muted" style="font-size: 3rem;">
+            <i class="bi bi-search"></i>
+        </div>
+        <h3 class="h4 fw-bold">No Destinations Found</h3>
+        <p class="text-muted">We couldn't find any destination matching your search parameters.</p>
+        <a href="{{ url_for('main.destinations') }}" class="btn btn-primary-teal">
+            Clear Filters & View All
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

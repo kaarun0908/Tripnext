@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ room.room_type }} — {{ room.hotel.name }} | TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.hotels') }}">Hotels</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.hotel_detail', hotel_id=room.hotel.id) }}">{{ room.hotel.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Book Room</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow rounded-4 overflow-hidden bg-white">
+                <div class="p-4 text-white" style="background: linear-gradient(135deg, var(--primary-color), #0f172a);">
+                    <span class="badge bg-warning text-dark mb-2">Hotel Room Reservation</span>
+                    <h1 class="h3 fw-bold mb-1">{{ room.room_type }}</h1>
+                    <p class="mb-0 small opacity-75">
+                        <i class="bi bi-building me-1"></i> {{ room.hotel.name }} &bull; {{ room.hotel.destination.name }}
+                    </p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="{{ url_for('bookings.book_room', room_id=room.id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Hidden elements for dynamic calculation and inventory probe -->
+                        <input type="hidden" id="room-price-per-night" value="{{ room.price_per_night }}">
+                        <input type="hidden" id="room-id-field" value="{{ room.id }}">
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Check-in Date <span class="text-danger">*</span></label>
+                                {{ form.check_in(class="form-control form-control-lg" + (" is-invalid" if form.check_in.errors else ""), id="hotel-checkin", type="date") }}
+                                {% for error in form.check_in.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Check-out Date <span class="text-danger">*</span></label>
+                                {{ form.check_out(class="form-control form-control-lg" + (" is-invalid" if form.check_out.errors else ""), id="hotel-checkout", type="date") }}
+                                {% for error in form.check_out.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Number of Guests <span class="text-danger">*</span></label>
+                                {{ form.number_of_guests(class="form-control form-control-lg" + (" is-invalid" if form.number_of_guests.errors else ""), id="hotel-guests", type="number", min="1", max=room.capacity, value=form.number_of_guests.data or 1) }}
+                                {% for error in form.number_of_guests.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="text-muted">Maximum capacity for this room: <strong>{{ room.capacity }} guests</strong></small>
+                            </div>
+
+                            <div class="col-md-6 d-flex flex-column justify-content-center">
+                                <label class="form-label fw-bold text-muted">Availability Status</label>
+                                <div id="availability-feedback">
+                                    <span class="badge bg-secondary">Select check-in & check-out dates</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Special Requests (Optional)</label>
+                            {{ form.special_requests(class="form-control", rows=2, placeholder="e.g. Quiet room, high floor, airport taxi pickup...") }}
+                        </div>
+
+                        <!-- Live Calculation Summary -->
+                        <div class="p-4 rounded-3 bg-light border mb-4">
+                            <h5 class="fw-bold h6 mb-3 text-dark">Reservation Summary</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Rate per Night:</span>
+                                <span>{{ room.price_per_night | inr }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Duration:</span>
+                                <span id="nights-count-display">1 night</span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold fs-6">Total Reservation Cost:</span>
+                                <span class="fs-4 fw-bold text-teal" id="calculated-total-display" style="color: var(--primary-color);">{{ room.price_per_night | inr }}</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="room-submit-btn" class="btn btn-accent btn-lg shadow">
+                                <i class="bi bi-shield-check me-2"></i> Reserve Room & Proceed to Payment
+                            </button>
+                            <a href="{{ url_for('main.hotel_detail', hotel_id=room.hotel.id) }}" class="btn btn-light">
+                                Cancel & Return
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

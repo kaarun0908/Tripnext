@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — TripNest Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 fw-bold mb-0">{{ title }}</h1>
+                <a href="{{ url_for('admin.destinations') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Destinations
+                </a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Destination Name</label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Ooty") }}
+                            {% for err in form.name.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Category</label>
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">State / Region</label>
+                            {{ form.region(class="form-control" + (" is-invalid" if form.region.errors else ""), placeholder="e.g. Tamil Nadu") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Country</label>
+                            {{ form.country(class="form-control" + (" is-invalid" if form.country.errors else "")) }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Hero Image URL</label>
+                            {{ form.image_url(class="form-control" + (" is-invalid" if form.image_url.errors else ""), placeholder="https://images.unsplash.com/...") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Estimated Budget (₹)</label>
+                            {{ form.estimated_budget(class="form-control" + (" is-invalid" if form.estimated_budget.errors else "")) }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        {{ form.description(class="form-control", rows=4, placeholder="Detailed destination description...") }}
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        {{ form.is_active(class="form-check-input") }}
+                        <label class="form-check-label fw-semibold" for="is_active">Publish and make active for tourists</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-teal px-4">Save Destination</button>
+                        <a href="{{ url_for('admin.destinations') }}" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

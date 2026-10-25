@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}{{ package.name }} — Tour Package | TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.packages') }}" class="text-decoration-none">Packages</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ package.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Detail Hero -->
+    <div class="detail-hero">
+        <img src="{{ package.image_url or package.destination.image_url }}" alt="{{ package.name }}">
+        <div class="detail-hero-overlay">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
+                        <i class="bi bi-clock me-1"></i> {{ package.duration_days }} Days Expedition
+                    </span>
+                    <h1 class="display-5 fw-bold mb-1">{{ package.name }}</h1>
+                    <p class="mb-0 fs-6 opacity-75">
+                        <i class="bi bi-geo-alt-fill me-1 text-danger"></i> {{ package.destination.name }}, {{ package.destination.region }}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-light text-dark px-3 py-2 fs-5 fw-bold shadow">
+                        {{ package.price_per_person | inr }} <small class="fw-normal fs-6 text-muted">/ person</small>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Overview -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <h3 class="h4 fw-bold mb-3">Package Overview</h3>
+                <p class="text-secondary leading-relaxed mb-0">{{ package.description }}</p>
+            </div>
+
+            <!-- Inclusions -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <h3 class="h4 fw-bold mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> What's Included</h3>
+                <div class="row g-2">
+                    {% for inc in package.inclusion_list %}
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2 p-2 border rounded-3 bg-light">
+                            <i class="bi bi-patch-check-fill text-teal" style="color: var(--primary-color);"></i>
+                            <span class="small fw-semibold text-dark">{{ inc }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Day-wise Itinerary -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h3 class="h4 fw-bold mb-4"><i class="bi bi-calendar-range text-primary me-2"></i> Day-by-Day Itinerary</h3>
+
+                <div class="itinerary-timeline ps-2">
+                    {% for day in package.itineraries %}
+                    <div class="itinerary-step">
+                        <span class="badge bg-teal text-white mb-2" style="background-color: var(--primary-color);">Day {{ day.day_number }}</span>
+                        <h5 class="fw-bold mb-1">{{ day.title }}</h5>
+                        <p class="small text-muted mb-0">{{ day.description }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">Standard detailed itinerary will be provided upon reservation.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Booking Action Box -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
+                <h3 class="h5 fw-bold mb-3">Reserve This Tour</h3>
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Price per Person:</span>
+                        <span class="fw-bold">{{ package.price_per_person | inr }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Duration:</span>
+                        <span class="fw-bold">{{ package.duration_days }} Days</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Location:</span>
+                        <span class="fw-bold">{{ package.destination.name }}</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('bookings.book_package', package_id=package.id) }}" class="btn btn-accent btn-lg w-100 shadow mb-3">
+                    <i class="bi bi-calendar-check me-2"></i> Select Dates & Book
+                </a>
+
+                <div class="small text-muted text-center">
+                    <i class="bi bi-shield-lock-fill text-success me-1"></i> Instant Confirmation & Flexible Demo Payment
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

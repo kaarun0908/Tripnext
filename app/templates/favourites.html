@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}My Favourite Destinations — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <span class="section-tag">Wishlist</span>
+            <h1 class="section-title h2 mb-1">My Saved Favourites</h1>
+            <p class="text-muted">Destinations you have marked for future travels.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('main.destinations') }}" class="btn btn-primary-teal">
+                <i class="bi bi-search me-1"></i> Discover More
+            </a>
+        </div>
+    </div>
+
+    {% if favourites %}
+    <div class="row g-4">
+        {% for fav in favourites %}
+        <div class="col-lg-4 col-md-6">
+            <div class="trip-card">
+                <div class="card-img-wrapper">
+                    <img src="{{ fav.destination.image_url }}" alt="{{ fav.destination.name }}" class="card-img-top">
+                    <span class="category-badge">{{ fav.destination.category }}</span>
+                    <span class="price-tag-badge">From {{ fav.destination.estimated_budget | inr }}</span>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title h5 mb-1">{{ fav.destination.name }}</h2>
+                    <small class="text-muted d-block mb-2"><i class="bi bi-geo-alt me-1 text-primary"></i> {{ fav.destination.region }}, {{ fav.destination.country }}</small>
+                    <p class="card-text small">{{ fav.destination.description[:100] }}...</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <form action="{{ url_for('main.toggle_favourite', destination_id=fav.destination.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash me-1"></i> Remove
+                            </button>
+                        </form>
+                        <a href="{{ url_for('main.destination_detail', destination_id=fav.destination.id) }}" class="btn btn-primary-teal btn-sm">
+                            View Sights & Tours
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-heart text-muted" style="font-size: 3.5rem;"></i>
+        <h3 class="h4 fw-bold mt-3">No Favourites Saved Yet</h3>
+        <p class="text-muted">Browse our destinations and click the heart icon to save your dream spots.</p>
+        <a href="{{ url_for('main.destinations') }}" class="btn btn-primary-teal">
+            Browse Destinations
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

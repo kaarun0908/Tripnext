@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Result — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white text-center p-4 p-md-5">
+                {% if booking.payment and booking.payment.payment_status == 'SUCCESS' %}
+                    <div class="mb-3 text-success">
+                        <i class="bi bi-check-circle-fill" style="font-size: 4rem;"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-semibold mb-2">Payment Confirmed</span>
+                    <h1 class="h3 fw-bold mb-2">Payment Successful!</h1>
+                    <p class="text-muted mb-4">
+                        Your transaction has been processed. Your booking is confirmed and ready for your arrival.
+                    </p>
+                {% else %}
+                    <div class="mb-3 text-danger">
+                        <i class="bi bi-x-circle-fill" style="font-size: 4rem;"></i>
+                    </div>
+                    <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-semibold mb-2">Transaction Failed</span>
+                    <h1 class="h3 fw-bold mb-2">Payment Did Not Complete</h1>
+                    <p class="text-muted mb-4">
+                        The simulated payment was rejected or aborted. You can retry with another payment method.
+                    </p>
+                {% endif %}
+
+                <!-- Transaction Summary Box -->
+                <div class="p-3 bg-light rounded-3 text-start mb-4 border">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Booking Reference:</span>
+                        <span class="fw-bold">{{ booking.booking_reference }}</span>
+                    </div>
+                    {% if booking.payment %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Transaction Reference:</span>
+                        <code class="fw-bold">{{ booking.payment.transaction_reference }}</code>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Payment Method:</span>
+                        <span class="fw-semibold">{{ booking.payment.payment_method }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Total Paid:</span>
+                        <span class="fw-bold text-teal" style="color: var(--primary-color);">{{ booking.payment.amount | inr }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Timestamp:</span>
+                        <span class="small">{{ booking.payment.created_at.strftime('%b %d, %Y %I:%M %p') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ url_for('bookings.booking_detail', booking_id=booking.id) }}" class="btn btn-primary-teal">
+                        <i class="bi bi-receipt me-1"></i> View Booking Details
+                    </a>
+                    {% if not booking.payment or booking.payment.payment_status != 'SUCCESS' %}
+                    <a href="{{ url_for('bookings.checkout', booking_id=booking.id) }}" class="btn btn-accent">
+                        <i class="bi bi-arrow-repeat me-1"></i> Retry Payment
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-light">
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

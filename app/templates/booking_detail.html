@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Booking {{ booking.booking_reference }} — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('bookings.my_bookings') }}">My Bookings</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ booking.booking_reference }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Header Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 border-bottom mb-4">
+                    <div>
+                        <span class="text-muted small">Booking Reference Number</span>
+                        <h1 class="h3 fw-bold mb-0 text-dark">{{ booking.booking_reference }}</h1>
+                    </div>
+                    <div>
+                        {% if booking.booking_status == 'CONFIRMED' %}
+                            <span class="badge badge-status badge-confirmed fs-6">CONFIRMED</span>
+                        {% elif booking.booking_status == 'PENDING' %}
+                            <span class="badge badge-status badge-pending fs-6">PENDING PAYMENT</span>
+                        {% elif booking.booking_status == 'CANCELLED' %}
+                            <span class="badge badge-status badge-cancelled fs-6">CANCELLED</span>
+                        {% else %}
+                            <span class="badge badge-status badge-completed fs-6">{{ booking.booking_status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Item Information -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-7">
+                        <h4 class="h5 fw-bold mb-2">
+                            {% if booking.package %}
+                                {{ booking.package.name }}
+                            {% elif booking.room %}
+                                {{ booking.room.hotel.name }} &bull; {{ booking.room.room_type }}
+                            {% endif %}
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                            {% if booking.package %}
+                                {{ booking.package.destination.name }}, {{ booking.package.destination.region }}
+                            {% elif booking.room %}
+                                {{ booking.room.hotel.address }} &bull; {{ booking.room.hotel.destination.name }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        <span class="text-muted small d-block">Reserved On</span>
+                        <span class="fw-semibold">{{ booking.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                </div>
+
+                <!-- Travel Dates & Guests details -->
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="row g-2 text-center text-md-start">
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Check-in / Start</span>
+                            <span class="fw-bold fs-6">{{ booking.check_in.strftime('%a, %b %d, %Y') }}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Check-out / End</span>
+                            <span class="fw-bold fs-6">{{ booking.check_out.strftime('%a, %b %d, %Y') }}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Travellers / Nights</span>
+                            <span class="fw-bold fs-6">{{ booking.number_of_guests }} Guests ({{ booking.nights_count }} Nights)</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if booking.special_requests %}
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-1">Customer Special Requests:</h6>
+                    <p class="small text-secondary bg-light p-3 rounded-3 mb-0">{{ booking.special_requests }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Cost Breakdown Table -->
+                <h5 class="h6 fw-bold mb-3 text-dark">Payment Details</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Item Subtotal</td>
+                                <td class="text-end fw-semibold">{{ booking.total_amount | inr }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Taxes, GST & Surcharges</td>
+                                <td class="text-end text-success fw-semibold">₹0.00 (All Inclusive)</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-bold fs-6">Grand Total:</td>
+                                <td class="text-end fw-bold fs-5 text-teal" style="color: var(--primary-color);">{{ booking.total_amount | inr }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Payment Status Pill -->
+                <div class="p-3 border rounded-3 d-flex flex-wrap justify-content-between align-items-center bg-light">
+                    <div>
+                        <span class="text-muted small d-block">Payment Method:</span>
+                        <span class="fw-bold">{{ booking.payment.payment_method if booking.payment else 'Not yet selected' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Transaction Reference:</span>
+                        <code class="fw-bold text-dark">{{ booking.payment.transaction_reference if booking.payment else 'None' }}</code>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Status:</span>
+                        {% if booking.payment and booking.payment.payment_status == 'SUCCESS' %}
+                            <span class="badge bg-success">PAID</span>
+                        {% elif booking.payment and booking.payment.payment_status == 'FAILED' %}
+                            <span class="badge bg-danger">FAILED</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">UNPAID</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Status Audit History -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h3 class="h5 fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i> Booking Audit Trail</h3>
+                <div class="itinerary-timeline ps-2">
+                    {% for item in booking.status_history %}
+                    <div class="itinerary-step">
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-secondary mb-1">
+                                {% if item.old_status %}{{ item.old_status }} &rarr; {% endif %}{{ item.new_status }}
+                            </span>
+                            <small class="text-muted">{{ item.changed_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+                        </div>
+                        <p class="small text-muted mb-0">{{ item.remarks or 'Status updated' }}</p>
+                    </div>
+                    {% else %}
+                    <p class="small text-muted mb-0">No history events recorded.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
+                <h4 class="h5 fw-bold mb-3">Booking Actions</h4>
+
+                {% if booking.booking_status == 'PENDING' %}
+                    <a href="{{ url_for('bookings.checkout', booking_id=booking.id) }}" class="btn btn-accent btn-lg w-100 mb-3 shadow">
+                        <i class="bi bi-credit-card me-2"></i> Pay Now ({{ booking.total_amount | inr }})
+                    </a>
+                {% endif %}
+
+                {% if booking.booking_status != 'CANCELLED' %}
+                    <button type="button" class="btn btn-outline-danger w-100 mb-3" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel Reservation
+                    </button>
+                {% else %}
+                    <div class="alert alert-secondary small text-center mb-3">
+                        <i class="bi bi-info-circle me-1"></i> This booking is cancelled.
+                    </div>
+                {% endif %}
+
+                <a href="{{ url_for('bookings.my_bookings') }}" class="btn btn-light w-100">
+                    <i class="bi bi-arrow-left me-1"></i> Back to My Bookings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="cancelModalLabel">Cancel Booking?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-secondary">
+                Are you sure you want to cancel booking <strong>{{ booking.booking_reference }}</strong>? 
+                Any allocated room inventory will be instantly released back to the hotel.
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep Booking</button>
+                <form action="{{ url_for('bookings.cancel', booking_id=booking.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

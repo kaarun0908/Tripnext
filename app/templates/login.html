@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In or Register — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+                <!-- Header -->
+                <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, var(--primary-color), #0f172a);">
+                    <i class="bi bi-compass-fill fs-1 text-warning mb-2 d-inline-block"></i>
+                    <h1 class="h3 fw-bold mb-1">Welcome to TripNest</h1>
+                    <p class="small opacity-75 mb-0">Your Smart Portal for Indian Tourist Bookings</p>
+                </div>
+
+                <!-- Tabs: Sign In / Register -->
+                <div class="p-4 p-md-5">
+                    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-3" id="authTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-3 fw-semibold {% if active_tab == 'login' %}active{% endif %}" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-3 fw-semibold {% if active_tab == 'register' %}active{% endif %}" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-pane" type="button" role="tab">
+                                <i class="bi bi-person-plus me-1"></i> Create Account
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="authTabsContent">
+                        <!-- Sign In Pane -->
+                        <div class="tab-pane fade {% if active_tab == 'login' %}show active{% endif %}" id="login-pane" role="tabpanel">
+                            <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+                                {{ form.hidden_tag() }}
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Email Address</label>
+                                    {{ form.email(class="form-control form-control-lg" + (" is-invalid" if form.email.errors else ""), placeholder="you@example.com") }}
+                                    {% for error in form.email.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Password</label>
+                                    {{ form.password(class="form-control form-control-lg" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+                                    {% for error in form.password.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="form-check">
+                                        {{ form.remember_me(class="form-check-input") }}
+                                        <label class="form-check-label small" for="remember_me">Remember my session</label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary-teal btn-lg w-100 shadow mb-3">
+                                    Sign In to TripNest
+                                </button>
+                            </form>
+
+                            <!-- Demo Credentials Box -->
+                            <div class="p-3 bg-light rounded-3 border small">
+                                <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-key-fill text-warning me-1"></i> Demo Credentials (Quick Fill)</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillLogin('priya.sharma@example.com', 'Customer@123')">
+                                        Tourist: Priya Sharma
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillLogin('admin@tripnest.com', 'Admin@12345')">
+                                        Administrator
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Register Pane -->
+                        <div class="tab-pane fade {% if active_tab == 'register' %}show active{% endif %}" id="register-pane" role="tabpanel">
+                            <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+                                {{ reg_form.hidden_tag() }}
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Full Name</label>
+                                    {{ reg_form.full_name(class="form-control form-control-lg" + (" is-invalid" if reg_form.full_name.errors else ""), placeholder="e.g. Ananya Rao") }}
+                                    {% for error in reg_form.full_name.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Email Address</label>
+                                    {{ reg_form.email(class="form-control form-control-lg" + (" is-invalid" if reg_form.email.errors else ""), placeholder="ananya@example.com") }}
+                                    {% for error in reg_form.email.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Phone Number (Optional)</label>
+                                    {{ reg_form.phone(class="form-control form-control-lg" + (" is-invalid" if reg_form.phone.errors else ""), placeholder="+91 9876543210") }}
+                                    {% for error in reg_form.phone.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="row g-2 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Password</label>
+                                        {{ reg_form.password(class="form-control form-control-lg" + (" is-invalid" if reg_form.password.errors else ""), placeholder="••••••••") }}
+                                        {% for error in reg_form.password.errors %}
+                                            <div class="invalid-feedback">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Confirm Password</label>
+                                        {{ reg_form.confirm_password(class="form-control form-control-lg" + (" is-invalid" if reg_form.confirm_password.errors else ""), placeholder="••••••••") }}
+                                        {% for error in reg_form.confirm_password.errors %}
+                                            <div class="invalid-feedback">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-accent btn-lg w-100 shadow">
+                                    Create My Account
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillLogin(email, password) {
+    const emailInput = document.querySelector('#login-pane input[name="email"]');
+    const pwdInput = document.querySelector('#login-pane input[name="password"]');
+    if (emailInput && pwdInput) {
+        emailInput.value = email;
+        pwdInput.value = password;
+    }
+}
+</script>
+{% endblock %}

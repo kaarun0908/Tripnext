@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Simulated Payment — TripNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <!-- Simulated Payment Disclaimer Alert -->
+            <div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 mb-4 p-3">
+                <i class="bi bi-shield-exclamation fs-3 text-warning"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Simulated Demonstration Payment Portal</h6>
+                    <small class="mb-0 text-dark">
+                        This is a simulated sandbox interface for demonstration purposes. Do NOT enter real credit card numbers, CVVs, PINs, or UPI credentials.
+                    </small>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+                <div class="p-4 text-white" style="background: linear-gradient(135deg, var(--primary-color), #0f172a);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-warning text-dark mb-1">Checkout</span>
+                            <h1 class="h4 fw-bold mb-0">Secure Demo Payment</h1>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-white-50 small d-block">Amount Due</span>
+                            <span class="fs-4 fw-bold text-white">{{ booking.total_amount | inr }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Booking Brief -->
+                    <div class="p-3 bg-light rounded-3 mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Booking Reference:</span>
+                            <span class="fw-bold">{{ booking.booking_reference }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Reservation:</span>
+                            <span class="fw-semibold">
+                                {{ booking.package.name if booking.package else (booking.room.hotel.name + ' - ' + booking.room.room_type) }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Travel Dates:</span>
+                            <span>{{ booking.check_in.strftime('%b %d') }} to {{ booking.check_out.strftime('%b %d, %Y') }}</span>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('bookings.checkout', booking_id=booking.id) }}" id="payment-form" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Select Demo Payment Method</label>
+                            {{ form.payment_method(class="form-select form-select-lg") }}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Demo Identifier (Mock UPI ID or Card Holder Name)</label>
+                            {{ form.simulated_account(class="form-control form-control-lg", placeholder="e.g. tourist@okhdfcbank or Priya Sharma") }}
+                            <small class="text-muted">Optional mockup identifier for your payment receipt.</small>
+                        </div>
+
+                        <div class="mb-4 p-3 border rounded-3 bg-light">
+                            <label class="form-label fw-bold text-dark mb-1">Simulate Gateway Response</label>
+                            <p class="small text-muted mb-2">You can simulate either a successful transaction or a rejected bank transaction to test error handling.</p>
+                            {{ form.simulate_status(class="form-select") }}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-accent btn-lg shadow">
+                                <i class="bi bi-shield-lock-fill me-2"></i> Authorize Demo Payment ({{ booking.total_amount | inr }})
+                            </button>
+                            <a href="{{ url_for('bookings.booking_detail', booking_id=booking.id) }}" class="btn btn-light">
+                                Cancel & Return to Booking
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
