@@ -50,7 +50,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                        <span class="small text-muted">{{ hotel.rooms.count() }} Room Options</span>
+                        <span class="small text-muted">{{ hotel.rooms|length }} Room Options</span>
                         <a href="{{ url_for('main.hotel_detail', hotel_id=hotel.id) }}" class="btn btn-primary-teal btn-sm">
                             View Rooms & Stays <i class="bi bi-arrow-right ms-1"></i>
                         </a>

@@ -44,7 +44,7 @@
                                 <span class="badge bg-secondary">Customer</span>
                             {% endif %}
                         </td>
-                        <td>{{ u.bookings.count() }}</td>
+                        <td>{{ u.bookings|list|length }}</td>
                         <td>{{ u.created_at.strftime('%b %d, %Y') }}</td>
                         <td class="text-end pe-4">
                             {% if u.id != current_user.id %}

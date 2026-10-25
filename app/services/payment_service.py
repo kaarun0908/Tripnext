@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 from app.models import Payment, Booking, BookingStatusHistory
 
@@ -9,7 +9,7 @@ def process_simulated_payment(booking_id, payment_method, simulate_status='SUCCE
     Prevents duplicate payment records and updates booking status accordingly.
     """
     try:
-        booking = Booking.query.get(booking_id)
+        booking = db.session.get(Booking, booking_id)
         if not booking:
             raise ValueError("Booking not found.")
 
@@ -34,7 +34,7 @@ def process_simulated_payment(booking_id, payment_method, simulate_status='SUCCE
             payment.payment_method = payment_method
             payment.transaction_reference = tx_ref
             payment.payment_status = simulate_status
-            payment.created_at = datetime.utcnow()
+            payment.created_at = datetime.now(timezone.utc)
 
         # Update booking status
         old_status = booking.booking_status

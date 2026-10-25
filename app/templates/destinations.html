@@ -67,7 +67,7 @@
         <div class="col-lg-4 col-md-6">
             <div class="trip-card">
                 <div class="card-img-wrapper">
-                    <img src="{{ dest.image_url }}" alt="{{ dest.name }}" class="card-img-top">
+                    <img src="{{ dest.image_url }}" alt="{{ dest.name }}" class="card-img-top" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=80';">
                     <span class="category-badge">{{ dest.category }}</span>
                     <span class="price-tag-badge">From {{ dest.estimated_budget | inr }}</span>
 
@@ -92,7 +92,7 @@
 
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                         <div class="small text-muted">
-                            <i class="bi bi-compass me-1"></i> {{ dest.attractions|length }} Sights | {{ dest.packages.count() }} Packages
+                            <i class="bi bi-compass me-1"></i> {{ dest.attractions|length }} Sights | {{ dest.packages|list|length }} Packages
                         </div>
                         <a href="{{ url_for('main.destination_detail', destination_id=dest.id) }}" class="btn btn-sm btn-primary-teal">
                             Explore <i class="bi bi-chevron-right ms-1"></i>

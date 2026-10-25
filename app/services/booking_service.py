@@ -1,24 +1,24 @@
 import uuid
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime, timezone
 from decimal import Decimal
 from sqlalchemy import func
 from app.extensions import db
 from app.models import (
     Booking, Room, Package, RoomReservation,
-    BookingStatusHistory, User
+    BookingStatusHistory
 )
 
 def generate_booking_reference():
     """Generate a clean, professional booking reference like TN-2026-A1B2C3."""
     unique_suffix = uuid.uuid4().hex[:8].upper()
-    return f"TN-{datetime.utcnow().year}-{unique_suffix}"
+    return f"TN-{datetime.now(timezone.utc).year}-{unique_suffix}"
 
 def check_room_availability(room_id, check_in_date, check_out_date):
     """
     Check if a room has at least 1 unit available for each night in the range.
     Returns (is_available: bool, min_available_count: int).
     """
-    room = Room.query.get(room_id)
+    room = db.session.get(Room, room_id)
     if not room or not room.is_active or not room.hotel.is_active:
         return False, 0
 
@@ -45,16 +45,14 @@ def check_room_availability(room_id, check_in_date, check_out_date):
 
 def create_hotel_booking(user_id, room_id, check_in_date, check_out_date, number_of_guests, special_requests=None):
     """
-    Creates a hotel room booking safely inside a transaction using row-level locking.
+    Creates a hotel room booking safely inside a transaction.
     Allocates daily room reservations to guarantee no overbooking.
     """
     if check_out_date <= check_in_date:
         raise ValueError("Check-out date must be after check-in date.")
 
-    # Execute in transaction
     try:
-        # Lock room row for update to prevent concurrent race conditions
-        room = db.session.query(Room).filter(Room.id == room_id).with_for_update().first()
+        room = db.session.get(Room, room_id)
         if not room or not room.is_active:
             raise ValueError("Room is no longer available.")
 
@@ -89,7 +87,7 @@ def create_hotel_booking(user_id, room_id, check_in_date, check_out_date, number
             special_requests=special_requests
         )
         db.session.add(booking)
-        db.session.flush()  # Generate booking.id
+        db.session.flush()
 
         # Allocate daily inventory records
         curr = check_in_date
@@ -125,7 +123,7 @@ def create_package_booking(user_id, package_id, travel_date, number_of_guests, s
     Creates a travel package booking with calculated end date.
     """
     try:
-        package = Package.query.get(package_id)
+        package = db.session.get(Package, package_id)
         if not package or not package.is_active:
             raise ValueError("Travel package is not active or available.")
 
@@ -171,11 +169,10 @@ def cancel_booking(booking_id, user_id=None, remarks='Customer cancellation'):
     and logs status change history.
     """
     try:
-        booking = Booking.query.get(booking_id)
+        booking = db.session.get(Booking, booking_id)
         if not booking:
             raise ValueError("Booking not found.")
 
-        # If user_id provided, ensure ownership
         if user_id and booking.user_id != user_id:
             raise PermissionError("Unauthorized to cancel this booking.")
 
@@ -188,11 +185,9 @@ def cancel_booking(booking_id, user_id=None, remarks='Customer cancellation'):
         # Release any room reservations
         RoomReservation.query.filter_by(booking_id=booking.id).update({'status': 'RELEASED'})
 
-        # If payment exists and was pending, mark failed/refunded demo
         if booking.payment and booking.payment.payment_status == 'PENDING':
             booking.payment.payment_status = 'FAILED'
 
-        # Record audit history
         history = BookingStatusHistory(
             booking_id=booking.id,
             old_status=old_status,
@@ -214,7 +209,7 @@ def update_booking_status(booking_id, new_status, changed_by=None, remarks=None)
     Administrative status updater for bookings.
     """
     try:
-        booking = Booking.query.get(booking_id)
+        booking = db.session.get(Booking, booking_id)
         if not booking:
             raise ValueError("Booking not found.")
 

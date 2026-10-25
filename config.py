@@ -2,28 +2,18 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv()
-
-def normalize_db_url(url):
-    if not url:
-        return url
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
-    elif url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
-    return url
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
-    """Base configuration."""
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'tripnest-default-dev-secret-key-replace-in-prod')
+    """Base configuration using SQLite database."""
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'tripnest-default-dev-secret-key-2026')
     
-    db_url = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/tripnest')
-    SQLALCHEMY_DATABASE_URI = normalize_db_url(db_url)
+    # SQLite as the primary database
+    default_sqlite_path = os.path.join(basedir, 'tripnest.db').replace('\\', '/')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', f'sqlite:///{default_sqlite_path}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-    }
+    SQLALCHEMY_ENGINE_OPTIONS = {}
     
     # Session and Cookie Security
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
@@ -38,15 +28,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     WTF_CSRF_ENABLED = False
-    
-    # In test mode, allow isolated in-memory test database or dedicated test db
-    test_db = os.environ.get('TEST_DATABASE_URL')
-    if test_db and 'postgres' in test_db and os.environ.get('USE_PG_FOR_TESTS'):
-        SQLALCHEMY_DATABASE_URI = normalize_db_url(test_db)
-    else:
-        # Fast, completely isolated test database that works across environments
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SQLALCHEMY_ENGINE_OPTIONS = {}
 
 class ProductionConfig(Config):

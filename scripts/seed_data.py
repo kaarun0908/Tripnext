@@ -312,7 +312,7 @@ def run_seed():
             "region": "Karnataka",
             "category": "Heritage",
             "description": "The cultural capital of Karnataka, celebrated for its spectacular illumination of the Mysore Palace, fragrant sandalwood, rich silk sarees, and royal heritage.",
-            "image_url": "https://images.unsplash.com/photo-1600100397608-f010e421e428?auto=format&fit=crop&w=1200&q=80",
+            "image_url": "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=80",
             "estimated_budget": Decimal("12000.00"),
             "attractions": [
                 {"name": "Mysore Palace (Amba Vilas)", "fee": Decimal("100.00"), "open": "10:00 AM - 05:30 PM", "desc": "Indo-Saracenic palace illuminated by 100,000 light bulbs every Sunday and festival evening."},

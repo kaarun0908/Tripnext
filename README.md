@@ -1,6 +1,6 @@
 # TripNest — Smart Tourist Booking System
 
-**TripNest** is a modern, responsive, full-stack tourist booking web application built with **Python 3**, **Flask**, **PostgreSQL**, **Flask-SQLAlchemy**, **Flask-Migrate**, **Flask-Login**, **Flask-WTF**, and **Bootstrap 5**.
+**TripNest** is a modern, responsive, full-stack tourist booking web application built with **Python 3**, **Flask**, **SQLite**, **Flask-SQLAlchemy**, **Flask-Migrate**, **Flask-Login**, **Flask-WTF**, and **Bootstrap 5**.
 
 The platform is inspired by world-class travel platforms, allowing tourists to discover curated Indian destinations (Ooty, Kodaikanal, Munnar, Goa, Jaipur, Manali, Mysuru, Alleppey), reserve packages, book hotel rooms with guaranteed inventory locking (eliminating overbooking), execute simulated transactions, and post verified feedback. Administrators have full visibility into live analytics, revenue charts, inventory CRUD, and CSV report export.
 
@@ -31,7 +31,7 @@ The platform is inspired by world-class travel platforms, allowing tourists to d
 | Layer | Technologies |
 | :--- | :--- |
 | **Backend** | Python 3, Flask, Werkzeug, python-dotenv |
-| **Database** | PostgreSQL 14+, SQLAlchemy 2.x, Flask-SQLAlchemy, Flask-Migrate |
+| **Database** | SQLite 3 (ACID compliant, zero configuration) &amp; PostgreSQL ready |
 | **Security & Auth**| Flask-Login, Werkzeug Password Hashing, Flask-WTF (CSRF) |
 | **Frontend** | Jinja2 Templates, Bootstrap 5.3, Bootstrap Icons, Custom CSS |
 | **Charts** | Chart.js |

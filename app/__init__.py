@@ -31,9 +31,9 @@ def create_app(config_name=None):
     # Context processors & template filters
     @app.context_processor
     def inject_global_data():
-        from datetime import datetime
+        from datetime import datetime, timezone
         return {
-            'current_year': datetime.utcnow().year,
+            'current_year': datetime.now(timezone.utc).year,
             'app_name': 'TripNest'
         }
 
@@ -58,5 +58,16 @@ def create_app(config_name=None):
     def internal_error(error):
         db.session.rollback()
         return render_template('errors/500.html'), 500
+
+    # Auto-initialize and seed database if empty
+    with app.app_context():
+        try:
+            from app.models import Destination
+            db.create_all()
+            if not Destination.query.first():
+                from scripts.seed_data import run_seed
+                run_seed()
+        except Exception as e:
+            app.logger.warning(f"Auto-migration/seed deferred: {e}")
 
     return app

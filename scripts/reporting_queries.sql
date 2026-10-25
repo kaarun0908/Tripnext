@@ -1,10 +1,10 @@
 -- ====================================================================
 -- TripNest: Smart Tourist Booking System — SQL & DBMS Demonstrations
--- Database: PostgreSQL 14+
+-- Database: SQLite 3 / Relational DBMS Compatible
 -- ====================================================================
 
 -- --------------------------------------------------------------------
--- 1. INDEX CREATION FOR OPTIMIZED SEARCH & BOOKING QUERIES
+-- 1. INDEXES FOR HIGH PERFORMANCE SEARCH & BOOKING QUERIES
 -- --------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_destinations_search ON destinations (name, region, category);
 CREATE INDEX IF NOT EXISTS idx_bookings_user_status ON bookings (user_id, booking_status);
@@ -13,9 +13,10 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (payment_status);
 
 -- --------------------------------------------------------------------
 -- 2. VIEW 1: Customer Booking Summaries with Multi-Table Joins
--- Demonstrates: LEFT JOIN, INNER JOIN, COALESCE, CASE statement
+-- Demonstrates: LEFT JOIN, INNER JOIN, COALESCE, CASE expressions
 -- --------------------------------------------------------------------
-CREATE OR REPLACE VIEW view_booking_summaries AS
+DROP VIEW IF EXISTS view_booking_summaries;
+CREATE VIEW view_booking_summaries AS
 SELECT 
     b.id AS booking_id,
     b.booking_reference,
@@ -27,11 +28,11 @@ SELECT
         WHEN b.room_id IS NOT NULL THEN 'Hotel Room'
         ELSE 'Other'
     END AS booking_type,
-    COALESCE(p.name, CONCAT(h.name, ' - ', r.room_type)) AS item_name,
+    COALESCE(p.name, h.name || ' - ' || r.room_type) AS item_name,
     COALESCE(d_pkg.name, d_htl.name) AS destination_name,
     b.check_in,
     b.check_out,
-    (b.check_out - b.check_in) AS duration_days,
+    CAST((JULIANDAY(b.check_out) - JULIANDAY(b.check_in)) AS INTEGER) AS duration_days,
     b.number_of_guests,
     b.total_amount,
     b.booking_status,
@@ -52,7 +53,8 @@ LEFT JOIN payments pay ON b.id = pay.booking_id;
 -- 3. VIEW 2: Destination Popularity & Rating Performance View
 -- Demonstrates: Multi-table JOIN, Aggregate functions (COUNT, AVG, SUM), GROUP BY
 -- --------------------------------------------------------------------
-CREATE OR REPLACE VIEW view_destination_popularity AS
+DROP VIEW IF EXISTS view_destination_popularity;
+CREATE VIEW view_destination_popularity AS
 SELECT 
     d.id AS destination_id,
     d.name AS destination_name,
@@ -76,11 +78,12 @@ GROUP BY d.id, d.name, d.region, d.category, d.estimated_budget;
 
 -- --------------------------------------------------------------------
 -- 4. VIEW 3: Monthly Booking Revenue Trends
--- Demonstrates: Date truncation, Aggregate functions, GROUP BY, ORDER BY
+-- Demonstrates: Date formatting, Aggregate functions, GROUP BY, ORDER BY
 -- --------------------------------------------------------------------
-CREATE OR REPLACE VIEW view_monthly_revenue_report AS
+DROP VIEW IF EXISTS view_monthly_revenue_report;
+CREATE VIEW view_monthly_revenue_report AS
 SELECT 
-    DATE_TRUNC('month', b.created_at)::DATE AS booking_month,
+    STRFTIME('%Y-%m', b.created_at) AS booking_month,
     COUNT(b.id) AS total_bookings_placed,
     COUNT(CASE WHEN b.booking_status = 'CONFIRMED' THEN 1 END) AS confirmed_bookings,
     COUNT(CASE WHEN b.booking_status = 'CANCELLED' THEN 1 END) AS cancelled_bookings,
@@ -88,12 +91,12 @@ SELECT
     ROUND(AVG(b.total_amount), 2) AS avg_booking_value
 FROM bookings b
 LEFT JOIN payments pay ON b.id = pay.booking_id
-GROUP BY DATE_TRUNC('month', b.created_at)
+GROUP BY STRFTIME('%Y-%m', b.created_at)
 ORDER BY booking_month DESC;
 
 -- --------------------------------------------------------------------
--- 5. COMPLEX QUERY: Top Performing Destinations by Confirmed Bookings
--- Demonstrates: GROUP BY with HAVING clause and Subquery Filter
+-- 5. COMPLEX QUERY: Top Performing Destinations with HAVING Clause
+-- Demonstrates: GROUP BY with HAVING condition
 -- --------------------------------------------------------------------
 SELECT 
     d.name AS destination_name,
@@ -112,7 +115,7 @@ ORDER BY gross_sales DESC;
 
 -- --------------------------------------------------------------------
 -- 6. AUDIT TRAIL QUERY: Complete Status History for a Booking
--- Demonstrates: Correlated lookups, User accountability, Chronological ordering
+-- Demonstrates: Audit accountability, Chronological ordering
 -- --------------------------------------------------------------------
 SELECT 
     b.booking_reference,
@@ -126,36 +129,3 @@ FROM booking_status_history h
 INNER JOIN bookings b ON h.booking_id = b.id
 LEFT JOIN users u ON h.changed_by = u.id
 ORDER BY h.changed_at DESC;
-
--- --------------------------------------------------------------------
--- 7. TRANSACTION DEMO: Safe Room Allocation with Concurrency Guard
--- Demonstrates: Transaction block, Locking, Conditional verification, Rollback capability
--- --------------------------------------------------------------------
-BEGIN;
-
--- Check inventory with row-level lock
-SELECT id, total_rooms 
-FROM rooms 
-WHERE id = 1 
-FOR UPDATE;
-
--- Insert the booking header
-INSERT INTO bookings (
-    booking_reference, user_id, room_id, check_in, check_out, 
-    number_of_guests, total_amount, booking_status, created_at
-) VALUES (
-    'TN-2026-SQLTXN01', 2, 1, '2026-11-10', '2026-11-12', 
-    2, 17000.00, 'PENDING', NOW()
-);
-
--- Allocate day-by-day inventory
-INSERT INTO room_reservations (booking_id, room_id, reservation_date, status, created_at)
-VALUES 
-    (currval(pg_get_serial_sequence('bookings', 'id')), 1, '2026-11-10', 'ACTIVE', NOW()),
-    (currval(pg_get_serial_sequence('bookings', 'id')), 1, '2026-11-11', 'ACTIVE', NOW());
-
--- Log audit history
-INSERT INTO booking_status_history (booking_id, old_status, new_status, changed_by, changed_at, remarks)
-VALUES (currval(pg_get_serial_sequence('bookings', 'id')), NULL, 'PENDING', 2, NOW(), 'Created via atomic SQL transaction');
-
-COMMIT;
